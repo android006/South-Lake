@@ -1,8 +1,10 @@
 import React from 'react';
-import { Router, Route, Switch } from 'dva/router';
+import { Router, Route, Switch ,IndexRoute,Redirect} from 'dva/router';
 import { LocaleProvider, Spin } from 'antd';
 import zhCN from 'antd/lib/locale-provider/zh_CN';
 import dynamic from 'dva/dynamic';
+import Login from './routes/Login/Login'
+import Login1 from './routes/User/Login'
 import cloneDeep from 'lodash/cloneDeep';
 import { getNavData } from './common/nav';
 import { getPlainNode } from './utils/utils';
@@ -53,10 +55,11 @@ function RouterConfig({ history, app }) {
   return (
     <LocaleProvider locale={zhCN}>
       <Router history={history}>
-        <Switch>
-          <Route path="/user" render={props => <UserLayout {...props} {...passProps} />} />
-          <Route path="/" render={props => <BasicLayout {...props} {...passProps} />} />
-        </Switch>
+          <Switch>
+            <Route path="/" exact component={Login}/>
+            <Route path="/user" render={props => <UserLayout {...props} {...passProps} />} />
+            <Route path="/"  render={props => <BasicLayout {...props} {...passProps} />} />
+          </Switch>
       </Router>
     </LocaleProvider>
   );

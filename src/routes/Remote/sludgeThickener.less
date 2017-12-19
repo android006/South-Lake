@@ -1,24 +1,9 @@
 .bg{
-  height: 850px;
+  position: relative;
+  height: calc(~"100vh - 98px");
   overflow: hidden;
   background: url("../../../src/assets/12-1.jpg") no-repeat 0 0;
-  -webkit-background-size: 100% 850px;
-  background-size: 100% 850px;
+  -webkit-background-size: 100% calc(~"100vh - 98px");
+  background-size: 100% calc(~"100vh - 98px");
 }
-.Dot1,
-.Dot2{
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  position: absolute;
-  z-index: 2;
-  background: #52fe55;
-}
-.Dot1{
-  top: 55%;
-  left: 41.5%;
-}
-.Dot2{
-  top: 55%;
-  left: 72%;
-}
+

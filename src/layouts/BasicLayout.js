@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Layout, Menu, Icon, Avatar, Dropdown, Tag, message, Spin } from 'antd';
+import { Layout, Menu, Icon,Modal,Button,Input, Avatar,Form, Dropdown, Tag, message, Spin } from 'antd';
 import DocumentTitle from 'react-document-title';
 import { connect } from 'dva';
 import { Link, Route, Redirect, Switch } from 'dva/router';
@@ -12,12 +12,15 @@ import Debounce from 'lodash-decorators/debounce';
 import HeaderSearch from '../components/HeaderSearch';
 import NoticeIcon from '../components/NoticeIcon';
 import GlobalFooter from '../components/GlobalFooter';
+import PublicService from '../components/Request/PublicService';
+import config from '../components/Request/config';
 import NotFound from '../routes/Exception/404';
 import styles from './BasicLayout.less';
 import logo from '../assets/logo.svg';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
+const FormItem = Form.Item;
 
 const query = {
   'screen-xs': {
@@ -51,6 +54,7 @@ class BasicLayout extends React.PureComponent {
     this.menus = props.navData.reduce((arr, current) => arr.concat(current.children), []);
     this.state = {
       openKeys: this.getDefaultCollapsedSubMenus(props),
+      visible: false,
     };
   }
   getChildContext() {
@@ -84,6 +88,11 @@ class BasicLayout extends React.PureComponent {
       this.props.dispatch({
         type: 'login/logout',
       });
+    }
+    if (key === 'changePwd'){
+      this.setState({
+        visible: true
+      })
     }
   }
   getMenuData = (data, parentPath) => {
@@ -240,15 +249,76 @@ class BasicLayout extends React.PureComponent {
       });
     }
   }
-  render() {
-    const { currentUser, collapsed, fetchingNotices, getRouteData } = this.props;
+  // 输入框change事件
+  inputChange (flag, e) {
+    let t = this;
+    t.setState({
+      [flag]: e.target.value
+    });
+  }
+  // 修改密码输入框显隐
+  changeModal () {
+    let t = this;
+    t.setState({visible: !t.state.visible});
+  }
+  // 检测两次新密码是否一致
+  checkPwd (flag, rule, value, callback) {
+    let t = this;
+    t.setState({
+      [flag]: value
+    }, () => {
+      if (t.state.newPsw && t.state.secondPsw && (t.state.secondPsw !== t.state.newPsw)) {
+        callback('两次密码不一致');
+      } else {
+        callback();
+      }
+    });
+  }
+  submit () {
+    let t = this;
+    console.log("修改密码成功",'submit')
+    // request({
+    //   url: '/admin/user/updatePsw',
+    //   method: 'POST',
+    //   data: {
+    //     ...t.state,
+    //     userId: PublicService.getCookie('userId')
+    //   }
+    // }).then(
+    //   data => {
+    //     if (data.rc === 0) {
+    //       t.changeModal();
+    //       message.success('修改成功');
+    //     } else {
+    //       message.error('修改失败');
+    //     }
+    //   }
+    // ).catch(
+    //   err => {
+    //     console.info(err, 'err');
+    //     message.error('修改失败');
+    //   }
+    // );
+  }
 
+  render() {
+    let t = this;
+    const formItemLayout = {
+      labelCol: {span: 4},
+      wrapperCol: {span: 8},
+    };
+    let {getFieldDecorator} = t.props.form;
+    const { currentUser, collapsed, fetchingNotices, getRouteData } = this.props;
     const menu = (
-      <Menu className={styles.menu} selectedKeys={[]} onClick={this.onMenuClick}>
-        <Menu.Item disabled><Icon type="user" />个人中心</Menu.Item>
-        <Menu.Item disabled><Icon type="setting" />设置</Menu.Item>
-        <Menu.Divider />
-        <Menu.Item key="logout"><Icon type="logout" />退出登录</Menu.Item>
+      <Menu onClick={t.onMenuClick.bind(t)} className={styles.menu}>
+        <Menu.Item key="changePwd" onClick={t.changeModal.bind(t)}>
+          <Icon style={{fontSize: 12, marginRight: 4}} type="lock"/>
+          <span >修改密码</span>
+        </Menu.Item>
+        <Menu.Item key="logout">
+          <Icon style={{fontSize: 12, marginRight: 4}} type="poweroff"/>
+          <span >退出登录</span>
+        </Menu.Item>
       </Menu>
     );
     const noticeData = this.getNoticeData();
@@ -266,11 +336,12 @@ class BasicLayout extends React.PureComponent {
           collapsed={collapsed}
           breakpoint="md"
           onCollapse={this.onCollapse}
-          width={256}
+          width={280}
           className={styles.sider}
+          style={{overflow: 'auto', height: '100vh'}}
         >
           <div className={styles.logo}>
-            <Link to="/">
+            <Link to="/digital/digitalSignage-list">
               <img src={logo} alt="logo" />
               <h1>南湖中水厂监控平台</h1>
             </Link>
@@ -294,56 +365,111 @@ class BasicLayout extends React.PureComponent {
               onClick={this.toggle}
             />
             <div className={styles.right}>
-              <HeaderSearch
-                className={`${styles.action} ${styles.search}`}
-                placeholder="站内搜索"
-                dataSource={['搜索提示一', '搜索提示二', '搜索提示三']}
-                onSearch={(value) => {
-                  console.log('input', value); // eslint-disable-line
-                }}
-                onPressEnter={(value) => {
-                  console.log('enter', value); // eslint-disable-line
-                }}
-              />
-              <NoticeIcon
-                className={styles.action}
-                count={currentUser.notifyCount}
-                onItemClick={(item, tabProps) => {
-                  console.log(item, tabProps); // eslint-disable-line
-                }}
-                onClear={this.handleNoticeClear}
-                onPopupVisibleChange={this.handleNoticeVisibleChange}
-                loading={fetchingNotices}
-                popupAlign={{ offset: [20, -16] }}
-              >
-                <NoticeIcon.Tab
-                  list={noticeData['通知']}
-                  title="通知"
-                  emptyText="你已查看所有通知"
-                  emptyImage="https://gw.alipayobjects.com/zos/rmsportal/wAhyIChODzsoKIOBHcBk.svg"
-                />
-                <NoticeIcon.Tab
-                  list={noticeData['消息']}
-                  title="消息"
-                  emptyText="您已读完所有消息"
-                  emptyImage="https://gw.alipayobjects.com/zos/rmsportal/sAuJeJzSKbUmHfBQRzmZ.svg"
-                />
-                <NoticeIcon.Tab
-                  list={noticeData['待办']}
-                  title="待办"
-                  emptyText="你已完成所有待办"
-                  emptyImage="https://gw.alipayobjects.com/zos/rmsportal/HsIsxMZiWKrNUavQUXqx.svg"
-                />
-              </NoticeIcon>
-              {currentUser.name ? (
-                <Dropdown overlay={menu}>
-                  <span className={`${styles.action} ${styles.account}`}>
-                    <Avatar size="small" className={styles.avatar} src={currentUser.avatar} />
-                    {currentUser.name}
-                  </span>
-                </Dropdown>
-              ) : <Spin size="small" style={{ marginLeft: 8 }} />}
+              <Dropdown trigger={['click']} overlay={menu} placement="bottomCenter">
+                  <span className={styles['ant-dropdown-link']} style={{cursor:'pointer',marginRight:'20px'}}>
+                  {PublicService.getCookie('nickName')}
+                    <Icon className={styles['t-ML2']} type="down"/>
+                </span>
+              </Dropdown>
             </div>
+            <Modal
+              title="修改密码"
+              onCancel={t.changeModal.bind(t)}
+              visible={t.state.visible}
+              className={styles['wp-change-pwd']}
+              footer={[
+                <Button onClick={t.changeModal.bind(t)} className={styles['wp-btn']} key="back" size={config.size}>返回</Button>,
+                <Button onClick={t.submit.bind(t)} className={styles['wp-btn']} key="submit" size={config.size}> 确认 </Button>,
+              ]}
+            >
+              <Form>
+                <FormItem {...formItemLayout} label="原密码">
+                  {getFieldDecorator('oldPsw', {
+                    rules: [{
+                      required: true,
+                      message: '请输入原密码',
+                    }],
+                  })(
+                    <Input onChange={t.inputChange.bind(t, 'oldPsw')} size={config.size} placeholder="请输入原密码"/>
+                  )}
+                </FormItem>
+                <FormItem {...formItemLayout} label="新密码">
+                  {getFieldDecorator('newPsw', {
+                    rules: [{
+                      required: true,
+                      message: '请输入新密码',
+                    }, {
+                      validator: t.checkPwd.bind(t, 'newPsw')
+                    }],
+                  })(
+                    <Input size={config.size} placeholder="请输入新密码"/>
+                  )}
+                </FormItem>
+                <FormItem {...formItemLayout} label="新密码确认">
+                  {getFieldDecorator('secondPsw', {
+                    rules: [{
+                      required: true,
+                      message: '请再次输入新密码',
+                    }, {
+                      validator: t.checkPwd.bind(t, 'secondPsw')
+                    }],
+                  })(
+                    <Input size={config.size} placeholder="请输入新密码"/>
+                  )}
+                </FormItem>
+              </Form>
+            </Modal>
+            {/*<div className={styles.right}>*/}
+              {/*<HeaderSearch*/}
+                {/*className={`${styles.action} ${styles.search}`}*/}
+                {/*placeholder="站内搜索"*/}
+                {/*dataSource={['搜索提示一', '搜索提示二', '搜索提示三']}*/}
+                {/*onSearch={(value) => {*/}
+                  {/*console.log('input', value); // eslint-disable-line*/}
+                {/*}}*/}
+                {/*onPressEnter={(value) => {*/}
+                  {/*console.log('enter', value); // eslint-disable-line*/}
+                {/*}}*/}
+              {/*/>*/}
+              {/*<NoticeIcon*/}
+                {/*className={styles.action}*/}
+                {/*count={currentUser.notifyCount}*/}
+                {/*onItemClick={(item, tabProps) => {*/}
+                  {/*console.log(item, tabProps); // eslint-disable-line*/}
+                {/*}}*/}
+                {/*onClear={this.handleNoticeClear}*/}
+                {/*onPopupVisibleChange={this.handleNoticeVisibleChange}*/}
+                {/*loading={fetchingNotices}*/}
+                {/*popupAlign={{ offset: [20, -16] }}*/}
+              {/*>*/}
+                {/*<NoticeIcon.Tab*/}
+                  {/*list={noticeData['通知']}*/}
+                  {/*title="通知"*/}
+                  {/*emptyText="你已查看所有通知"*/}
+                  {/*emptyImage="https://gw.alipayobjects.com/zos/rmsportal/wAhyIChODzsoKIOBHcBk.svg"*/}
+                {/*/>*/}
+                {/*<NoticeIcon.Tab*/}
+                  {/*list={noticeData['消息']}*/}
+                  {/*title="消息"*/}
+                  {/*emptyText="您已读完所有消息"*/}
+                  {/*emptyImage="https://gw.alipayobjects.com/zos/rmsportal/sAuJeJzSKbUmHfBQRzmZ.svg"*/}
+                {/*/>*/}
+                {/*<NoticeIcon.Tab*/}
+                  {/*list={noticeData['待办']}*/}
+                  {/*title="待办"*/}
+                  {/*emptyText="你已完成所有待办"*/}
+                  {/*emptyImage="https://gw.alipayobjects.com/zos/rmsportal/HsIsxMZiWKrNUavQUXqx.svg"*/}
+                {/*/>*/}
+              {/*</NoticeIcon>*/}
+              {/*{currentUser.name ? (*/}
+                {/*<Dropdown overlay={menu}>*/}
+                  {/*<span className={`${styles.action} ${styles.account}`}>*/}
+                    {/*<Avatar size="small" className={styles.avatar} src={currentUser.avatar} />*/}
+                    {/*{currentUser.name}*/}
+                  {/*</span>*/}
+                {/*</Dropdown>*/}
+              {/*) : <Spin size="small" style={{ marginLeft: 8 }} />}*/}
+            {/*</div>*/}
           </Header>
           <Content style={{ margin: '24px 24px 0', height: '100%' }}>
             <div style={{ minHeight: 'calc(100vh - 260px)' }}>
@@ -360,7 +486,7 @@ class BasicLayout extends React.PureComponent {
                     )
                   )
                 }
-                <Redirect exact from="/" to="/dashboard/analysis" />
+                <Redirect exact from="/" to="/digital/digitalSignage-list" />
                 <Route component={NotFound} />
               </Switch>
             </div>
@@ -384,4 +510,4 @@ export default connect(state => ({
   collapsed: state.global.collapsed,
   fetchingNotices: state.global.fetchingNotices,
   notices: state.global.notices,
-}))(BasicLayout);
+}))(Form.create()(BasicLayout));

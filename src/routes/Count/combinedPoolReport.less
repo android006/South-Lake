@@ -1,0 +1,35 @@
+// 表格容器
+.wpContainer {
+  border: 1px solid rgba(255,255,255,1);
+  overflow: hidden;
+  box-shadow:0 0 10px rgba(0,0,0,0.5);
+  border-radius:6px;
+  height: calc(~"100vh - 165px");
+  margin:10px;
+  background-color:  #ffffff;
+  .wpContainerContent{
+    .ant-pagination{
+      margin-right: 16px;
+    }
+  }
+  .wpContainerHeader {
+    border-bottom: 1px solid rgba(196, 196, 196, 1);
+    height: 26px;
+    line-height: 26px;
+  }
+  .wpLine {
+    width: 1px;
+    margin-left: 10px;
+    border-right: 1px solid rgba(196, 196, 196, 1);
+  }
+}
+.wpPage{
+  .ant-pagination-item-active{
+    background-color: #16b8be;
+    &:focus{
+      background-color:#16b8be;
+    }
+  }
+  text-align: center !important;
+  margin-top: 10px;
+}

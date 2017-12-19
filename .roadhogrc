@@ -20,5 +20,11 @@
   },
   "ignoreMomentLocale": true,
   "theme": "./src/theme.js",
-  "hash": true
+  "hash": true,
+  "proxy":{
+      "/":{
+        "target":"http://192.168.1.177:12082",
+        "changeOrigin":true
+      }
+    }
 }

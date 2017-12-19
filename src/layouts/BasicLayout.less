@@ -1,4 +1,6 @@
 @import "~antd/lib/style/themes/default.less";
+@import "../components/less/vendor-prefixes";
+@import "../components/less/variables";
 
 .header {
   padding: 0 12px 0 0;
@@ -6,7 +8,22 @@
   box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
   position: relative;
 }
-
+.t-ML2 {
+  margin-left: 2px;
+}
+.wp-change-pwd{
+  .ant-modal-header {
+    background-color: @light-blue;
+    height: 42px;
+  }
+}
+.wp-btn{
+  background-color: @base-color !important;
+  height: 22px;
+  .box-shadow(0 0 2px rgba(0, 0, 0, 0.2));
+  color: rgba(255, 255, 255, 1) !important;
+  border-color: @base-color;
+}
 .logo {
   height: 64px;
   position: relative;

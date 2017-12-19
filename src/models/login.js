@@ -46,7 +46,7 @@ export default {
           status: false,
         },
       });
-      yield put(routerRedux.push('/user/login'));
+      yield put(routerRedux.push('/'));
     },
   },
 
